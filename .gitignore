@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+build
+dist
+.next
+out
+
+# Misc
+.DS_Store
+*.pem
+.env
+.env*.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# Turbo
+.turbo
+
+# Mobile
+*.log
+*.tmp
+*.temp
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcuserdata
+
+# Android
+android/app/build/
+android/.gradle/
+*.apk
+*.aab
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
+
+#doc
+*.md

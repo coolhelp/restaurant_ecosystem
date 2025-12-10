@@ -1,0 +1,696 @@
+// Restaurant Ecosystem Database Schema
+// Supports SQL Server (production) and PostgreSQL (development)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver" // Change to "postgresql" for local development
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  phone         String?   @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          UserRole  @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  customer      Customer?
+  employee      Employee?
+  addresses     Address[]
+  orders        Order[]
+  loyaltyAccount LoyaltyAccount?
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  CUSTOMER
+  EMPLOYEE
+  MANAGER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Customer {
+  id               String    @id @default(uuid())
+  userId           String    @unique
+  dateOfBirth      DateTime?
+  preferredLocationId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredLocation Location? @relation(fields: [preferredLocationId], references: [id])
+
+  @@map("customers")
+}
+
+model Employee {
+  id          String       @id @default(uuid())
+  userId      String       @unique
+  locationId  String
+  employeeCode String      @unique
+  position    String
+  hireDate    DateTime
+  hourlyRate  Decimal?     @db.Decimal(10, 2)
+  permissions Json         // Store as JSON for flexibility
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location    Location     @relation(fields: [locationId], references: [id])
+  deliveries  Delivery[]
+
+  @@map("employees")
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  userId      String
+  label       String?  // "Home", "Work", etc.
+  street1     String
+  street2     String?
+  city        String
+  state       String
+  zipCode     String
+  country     String   @default("US")
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@map("addresses")
+}
+
+// ============================================
+// LOCATION & SETTINGS
+// ============================================
+
+model Location {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String    @unique
+  phone         String
+  email         String?
+  street1       String
+  street2       String?
+  city          String
+  state         String
+  zipCode       String
+  country       String    @default("US")
+  latitude      Decimal?  @db.Decimal(10, 8)
+  longitude     Decimal?  @db.Decimal(11, 8)
+  timezone      String    @default("America/New_York")
+  isActive      Boolean   @default(true)
+  settings      Json      // Store opening hours, delivery radius, etc.
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  employees     Employee[]
+  customers     Customer[]
+  categories    Category[]
+  orders        Order[]
+  inventory     Inventory[]
+  tables        Table[]
+  printers      Printer[]
+
+  @@map("locations")
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String   // "general", "payment", "loyalty", "notification", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ============================================
+// MENU MANAGEMENT
+// ============================================
+
+model Category {
+  id          String    @id @default(uuid())
+  locationId  String?   // null = available at all locations
+  name        String
+  slug        String
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  location    Location? @relation(fields: [locationId], references: [id])
+  items       Item[]
+
+  @@unique([locationId, slug])
+  @@map("categories")
+}
+
+model Item {
+  id          String    @id @default(uuid())
+  categoryId  String
+  sku         String?   @unique
+  name        String
+  slug        String
+  description String?
+  image       String?
+  basePrice   Decimal   @db.Decimal(10, 2)
+  cost        Decimal?  @db.Decimal(10, 2) // For profit calculations
+  calories    Int?
+  prepTime    Int?      // In minutes
+  isAvailable Boolean   @default(true)
+  isActive    Boolean   @default(true)
+  isFeatured  Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  tags        Json?     // ["spicy", "vegetarian", "gluten-free"]
+  allergens   Json?     // ["nuts", "dairy", "shellfish"]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    Category  @relation(fields: [categoryId], references: [id])
+  modifierGroups ItemModifierGroup[]
+  orderItems  OrderItem[]
+  inventory   Inventory[]
+
+  @@unique([categoryId, slug])
+  @@map("items")
+}
+
+model ModifierGroup {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  minSelection Int      @default(0)
+  maxSelection Int?
+  isRequired  Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items       ItemModifierGroup[]
+  modifiers   Modifier[]
+
+  @@map("modifier_groups")
+}
+
+model ItemModifierGroup {
+  itemId          String
+  modifierGroupId String
+  isRequired      Boolean @default(false)
+  sortOrder       Int     @default(0)
+
+  item            Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, modifierGroupId])
+  @@map("item_modifier_groups")
+}
+
+model Modifier {
+  id              String    @id @default(uuid())
+  modifierGroupId String
+  name            String
+  price           Decimal   @db.Decimal(10, 2)
+  isDefault       Boolean   @default(false)
+  isAvailable     Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  orderItemModifiers OrderItemModifier[]
+
+  @@map("modifiers")
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique // Human-readable order number
+  userId          String
+  locationId      String
+  orderType       OrderType
+  orderStatus     OrderStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  
+  // Delivery/Pickup Info
+  tableId         String?
+  tableNumber     String?
+  addressId       String?
+  scheduledFor    DateTime?
+  
+  // Pricing
+  subtotal        Decimal     @db.Decimal(10, 2)
+  taxAmount       Decimal     @db.Decimal(10, 2)
+  tipAmount       Decimal     @db.Decimal(10, 2) @default(0)
+  deliveryFee     Decimal     @db.Decimal(10, 2) @default(0)
+  discountAmount  Decimal     @db.Decimal(10, 2) @default(0)
+  loyaltyDiscount Decimal     @db.Decimal(10, 2) @default(0)
+  total           Decimal     @db.Decimal(10, 2)
+  
+  // Additional Info
+  specialInstructions String?
+  customerNotes   String?
+  kitchenNotes    String?
+  estimatedTime   Int?        // In minutes
+  
+  // Timestamps
+  placedAt        DateTime    @default(now())
+  acceptedAt      DateTime?
+  readyAt         DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  user            User        @relation(fields: [userId], references: [id])
+  location        Location    @relation(fields: [locationId], references: [id])
+  table           Table?      @relation(fields: [tableId], references: [id])
+  address         Address?    @relation(fields: [addressId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+  delivery        Delivery?
+  statusHistory   OrderStatusHistory[]
+
+  @@index([userId])
+  @@index([locationId])
+  @@index([orderStatus])
+  @@index([placedAt])
+  @@map("orders")
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEOUT
+  PICKUP
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+}
+
+model OrderItem {
+  id          String    @id @default(uuid())
+  orderId     String
+  itemId      String
+  quantity    Int
+  unitPrice   Decimal   @db.Decimal(10, 2)
+  subtotal    Decimal   @db.Decimal(10, 2)
+  specialInstructions String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item        Item      @relation(fields: [itemId], references: [id])
+  modifiers   OrderItemModifier[]
+
+  @@map("order_items")
+}
+
+model OrderItemModifier {
+  id          String    @id @default(uuid())
+  orderItemId String
+  modifierId  String
+  quantity    Int       @default(1)
+  price       Decimal   @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now())
+
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  modifier    Modifier  @relation(fields: [modifierId], references: [id])
+
+  @@map("order_item_modifiers")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  notes     String?
+  changedBy String?     // userId or "system"
+  createdAt DateTime    @default(now())
+
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model Table {
+  id          String   @id @default(uuid())
+  locationId  String
+  tableNumber String
+  capacity    Int
+  section     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  location    Location @relation(fields: [locationId], references: [id])
+  orders      Order[]
+
+  @@unique([locationId, tableNumber])
+  @@map("tables")
+}
+
+// ============================================
+// PAYMENTS
+// ============================================
+
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String
+  paymentMethod   PaymentMethod
+  provider        String        // "authorizenet", "clover", "ingenico", "cash"
+  amount          Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus
+  
+  // Provider Transaction Details
+  transactionId   String?       @unique
+  authCode        String?
+  cardLast4       String?
+  cardBrand       String?
+  cardToken       String?       // Tokenized card for future use
+  
+  // Metadata
+  metadata        Json?
+  errorMessage    String?
+  processedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order           Order         @relation(fields: [orderId], references: [id])
+  refunds         Refund[]
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  GIFT_CARD
+  LOYALTY_POINTS
+  TERMINAL
+}
+
+model Refund {
+  id          String    @id @default(uuid())
+  paymentId   String
+  amount      Decimal   @db.Decimal(10, 2)
+  reason      String
+  status      String    // "pending", "completed", "failed"
+  transactionId String?
+  processedBy String?   // userId
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  payment     Payment   @relation(fields: [paymentId], references: [id])
+
+  @@map("refunds")
+}
+
+// ============================================
+// LOYALTY PROGRAM
+// ============================================
+
+model LoyaltyAccount {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  pointsBalance   Int       @default(0)
+  lifetimePoints  Int       @default(0)
+  tier            String    @default("bronze") // bronze, silver, gold, platinum
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    LoyaltyTransaction[]
+
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyTransaction {
+  id              String    @id @default(uuid())
+  accountId       String
+  type            LoyaltyTransactionType
+  points          Int       // Positive for earn, negative for redeem
+  orderId         String?
+  description     String
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  account         LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@map("loyalty_transactions")
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  ADJUSTMENT
+  EXPIRATION
+  BONUS
+}
+
+model LoyaltyRule {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // "percentage", "fixed", "threshold"
+  value       Decimal  @db.Decimal(10, 2) // Points per dollar or threshold amount
+  minSpend    Decimal? @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("loyalty_rules")
+}
+
+// ============================================
+// DELIVERY
+// ============================================
+
+model Delivery {
+  id              String         @id @default(uuid())
+  orderId         String         @unique
+  driverId        String?
+  status          DeliveryStatus @default(PENDING)
+  
+  pickupAddress   String
+  deliveryAddress String
+  distance        Decimal?       @db.Decimal(10, 2) // In miles/km
+  estimatedTime   Int?           // In minutes
+  
+  assignedAt      DateTime?
+  pickedUpAt      DateTime?
+  deliveredAt     DateTime?
+  
+  driverNotes     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  order           Order          @relation(fields: [orderId], references: [id])
+  driver          Employee?      @relation(fields: [driverId], references: [id])
+
+  @@map("deliveries")
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  PICKED_UP
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+// ============================================
+// INVENTORY
+// ============================================
+
+model Inventory {
+  id                String    @id @default(uuid())
+  locationId        String
+  itemId            String?
+  ingredientName    String?   // For raw ingredients not tied to menu items
+  currentStock      Decimal   @db.Decimal(10, 2)
+  unit              String    // "kg", "lbs", "pieces", "liters"
+  reorderLevel      Decimal   @db.Decimal(10, 2)
+  reorderQuantity   Decimal   @db.Decimal(10, 2)
+  lastRestocked     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  location          Location  @relation(fields: [locationId], references: [id])
+  item              Item?     @relation(fields: [itemId], references: [id])
+  movements         StockMovement[]
+
+  @@unique([locationId, itemId, ingredientName])
+  @@map("inventory")
+}
+
+model StockMovement {
+  id          String    @id @default(uuid())
+  inventoryId String
+  type        String    // "restock", "usage", "waste", "adjustment"
+  quantity    Decimal   @db.Decimal(10, 2)
+  reason      String?
+  performedBy String?   // userId
+  createdAt   DateTime  @default(now())
+
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@map("stock_movements")
+}
+
+model PurchaseOrder {
+  id          String    @id @default(uuid())
+  orderNumber String    @unique
+  supplier    String
+  items       Json      // Array of items with quantities and prices
+  totalAmount Decimal   @db.Decimal(10, 2)
+  status      String    // "pending", "ordered", "received", "cancelled"
+  orderedBy   String?   // userId
+  orderedAt   DateTime?
+  receivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("purchase_orders")
+}
+
+// ============================================
+// PRINTING & KITCHEN DISPLAY
+// ============================================
+
+model Printer {
+  id          String   @id @default(uuid())
+  locationId  String
+  name        String
+  type        String   // "kitchen", "bar", "receipt", "label"
+  ipAddress   String
+  port        Int      @default(9100)
+  model       String?  // "epson", "star", etc.
+  isActive    Boolean  @default(true)
+  settings    Json?    // Printer-specific settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  location    Location @relation(fields: [locationId], references: [id])
+
+  @@map("printers")
+}
+
+// ============================================
+// PROMOTIONS & DISCOUNTS
+// ============================================
+
+model Promotion {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  name        String
+  description String?
+  type        String    // "percentage", "fixed", "bogo"
+  value       Decimal   @db.Decimal(10, 2)
+  minOrderAmount Decimal? @db.Decimal(10, 2)
+  maxDiscount Decimal?  @db.Decimal(10, 2)
+  usageLimit  Int?
+  usageCount  Int       @default(0)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("promotions")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String?   // null = broadcast to all
+  title       String
+  message     String
+  type        String    // "order_update", "promotion", "system"
+  data        Json?     // Additional data for the notification
+  isRead      Boolean   @default(false)
+  sentAt      DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String   // "ios", "android", "web"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_tokens")
+}
+

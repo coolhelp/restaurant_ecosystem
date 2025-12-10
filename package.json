@@ -1,0 +1,33 @@
+{
+  "name": "restaurant-ecosystem",
+  "version": "1.0.0",
+  "description": "Complete Restaurant Ecosystem - POS, Mobile App, Web Ordering, Admin Portal, Delivery App",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "backend:dev": "cd apps/backend && npm run dev",
+    "mobile:ios": "cd apps/mobile && npm run ios",
+    "mobile:android": "cd apps/mobile && npm run android",
+    "web:dev": "cd apps/web-ordering && npm run dev",
+    "admin:dev": "cd apps/admin-portal && npm run dev",
+    "pos:dev": "cd apps/pos-system && npm run dev",
+    "delivery:dev": "cd apps/delivery-app && npm run dev"
+  },
+  "devDependencies": {
+    "turbo": "^1.13.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+

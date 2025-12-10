@@ -29,7 +29,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+1234567890\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"]}
+            "url": {"raw": "http://localhost:3001/api/v1/auth/register", "host": ["http://localhost:3001/api/v1"], "path": ["auth", "register"]}
           }
         },
         {
@@ -49,7 +49,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"]}
+            "url": {"raw": "http://localhost:3001/api/v1/auth/login", "host": ["http://localhost:3001/api/v1"], "path": ["auth", "login"]}
           }
         }
       ]
@@ -61,21 +61,21 @@
           "name": "Get Categories",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{baseUrl}}/menu/categories", "host": ["{{baseUrl}}"], "path": ["menu", "categories"]}
+            "url": {"raw": "http://localhost:3001/api/v1/menu/categories", "host": ["http://localhost:3001/api/v1"], "path": ["menu", "categories"]}
           }
         },
         {
           "name": "Get Items",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{baseUrl}}/menu/items", "host": ["{{baseUrl}}"], "path": ["menu", "items"]}
+            "url": {"raw": "http://localhost:3001/api/v1/menu/items", "host": ["http://localhost:3001/api/v1"], "path": ["menu", "items"]}
           }
         },
         {
           "name": "Get Item by ID",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{baseUrl}}/menu/items/:id", "host": ["{{baseUrl}}"], "path": ["menu", "items", ":id"], "variable": [{"key": "id", "value": "item-id-here"}]}
+            "url": {"raw": "http://localhost:3001/api/v1/menu/items/:id", "host": ["http://localhost:3001/api/v1"], "path": ["menu", "items", ":id"], "variable": [{"key": "id", "value": "item-id-here"}]}
           }
         }
       ]
@@ -95,7 +95,7 @@
               "mode": "raw",
               "raw": "{\n  \"locationId\": \"location-id\",\n  \"orderType\": \"PICKUP\",\n  \"items\": [\n    {\n      \"itemId\": \"item-id\",\n      \"quantity\": 2,\n      \"unitPrice\": 12.99,\n      \"specialInstructions\": \"No onions\",\n      \"modifiers\": [\n        {\n          \"modifierId\": \"modifier-id\",\n          \"quantity\": 1,\n          \"price\": 1.50\n        }\n      ]\n    }\n  ],\n  \"tipAmount\": 5.00,\n  \"specialInstructions\": \"Please call when arriving\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"]}
+            "url": {"raw": "http://localhost:3001/api/v1/orders", "host": ["http://localhost:3001/api/v1"], "path": ["orders"]}
           }
         },
         {
@@ -103,7 +103,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"]}
+            "url": {"raw": "http://localhost:3001/api/v1/orders", "host": ["http://localhost:3001/api/v1"], "path": ["orders"]}
           }
         },
         {
@@ -111,7 +111,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/orders/:id", "host": ["{{baseUrl}}"], "path": ["orders", ":id"], "variable": [{"key": "id", "value": "order-id"}]}
+            "url": {"raw": "http://localhost:3001/api/v1/orders/:id", "host": ["http://localhost:3001/api/v1"], "path": ["orders", ":id"], "variable": [{"key": "id", "value": "order-id"}]}
           }
         },
         {
@@ -126,7 +126,7 @@
               "mode": "raw",
               "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"notes\": \"Order confirmed and being prepared\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/orders/:id/status", "host": ["{{baseUrl}}"], "path": ["orders", ":id", "status"], "variable": [{"key": "id", "value": "order-id"}]}
+            "url": {"raw": "http://localhost:3001/api/v1/orders/:id/status", "host": ["http://localhost:3001/api/v1"], "path": ["orders", ":id", "status"], "variable": [{"key": "id", "value": "order-id"}]}
           }
         }
       ]
@@ -146,7 +146,7 @@
               "mode": "raw",
               "raw": "{\n  \"orderId\": \"order-id\",\n  \"amount\": 49.99,\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"cardNumber\": \"4111111111111111\",\n  \"expiryMonth\": \"12\",\n  \"expiryYear\": \"2025\",\n  \"cvv\": \"123\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/payments/charge", "host": ["{{baseUrl}}"], "path": ["payments", "charge"]}
+            "url": {"raw": "http://localhost:3001/api/v1/payments/charge", "host": ["http://localhost:3001/api/v1"], "path": ["payments", "charge"]}
           }
         },
         {
@@ -161,7 +161,7 @@
               "mode": "raw",
               "raw": "{\n  \"paymentId\": \"payment-id\",\n  \"amount\": 10.00,\n  \"reason\": \"Customer request\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/payments/refund", "host": ["{{baseUrl}}"], "path": ["payments", "refund"]}
+            "url": {"raw": "http://localhost:3001/api/v1/payments/refund", "host": ["http://localhost:3001/api/v1"], "path": ["payments", "refund"]}
           }
         }
       ]
@@ -174,7 +174,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/loyalty/account", "host": ["{{baseUrl}}"], "path": ["loyalty", "account"]}
+            "url": {"raw": "http://localhost:3001/api/v1/loyalty/account", "host": ["http://localhost:3001/api/v1"], "path": ["loyalty", "account"]}
           }
         },
         {
@@ -189,7 +189,7 @@
               "mode": "raw",
               "raw": "{\n  \"orderId\": \"order-id\",\n  \"orderAmount\": 50.00\n}"
             },
-            "url": {"raw": "{{baseUrl}}/loyalty/earn", "host": ["{{baseUrl}}"], "path": ["loyalty", "earn"]}
+            "url": {"raw": "http://localhost:3001/api/v1/loyalty/earn", "host": ["http://localhost:3001/api/v1"], "path": ["loyalty", "earn"]}
           }
         },
         {
@@ -204,7 +204,7 @@
               "mode": "raw",
               "raw": "{\n  \"orderId\": \"order-id\",\n  \"points\": 250\n}"
             },
-            "url": {"raw": "{{baseUrl}}/loyalty/redeem", "host": ["{{baseUrl}}"], "path": ["loyalty", "redeem"]}
+            "url": {"raw": "http://localhost:3001/api/v1/loyalty/redeem", "host": ["http://localhost:3001/api/v1"], "path": ["loyalty", "redeem"]}
           }
         },
         {
@@ -212,7 +212,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/loyalty/transactions", "host": ["{{baseUrl}}"], "path": ["loyalty", "transactions"]}
+            "url": {"raw": "http://localhost:3001/api/v1/loyalty/transactions", "host": ["http://localhost:3001/api/v1"], "path": ["loyalty", "transactions"]}
           }
         }
       ]
@@ -225,7 +225,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/users/profile", "host": ["{{baseUrl}}"], "path": ["users", "profile"]}
+            "url": {"raw": "http://localhost:3001/api/v1/users/profile", "host": ["http://localhost:3001/api/v1"], "path": ["users", "profile"]}
           }
         },
         {
@@ -240,7 +240,7 @@
               "mode": "raw",
               "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+1234567890\"\n}"
             },
-            "url": {"raw": "{{baseUrl}}/users/profile", "host": ["{{baseUrl}}"], "path": ["users", "profile"]}
+            "url": {"raw": "http://localhost:3001/api/v1/users/profile", "host": ["http://localhost:3001/api/v1"], "path": ["users", "profile"]}
           }
         },
         {
@@ -248,7 +248,7 @@
           "request": {
             "method": "GET",
             "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
-            "url": {"raw": "{{baseUrl}}/users/addresses", "host": ["{{baseUrl}}"], "path": ["users", "addresses"]}
+            "url": {"raw": "http://localhost:3001/api/v1/users/addresses", "host": ["http://localhost:3001/api/v1"], "path": ["users", "addresses"]}
           }
         }
       ]
@@ -260,14 +260,14 @@
           "name": "Get Locations",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{baseUrl}}/locations", "host": ["{{baseUrl}}"], "path": ["locations"]}
+            "url": {"raw": "http://localhost:3001/api/v1/locations", "host": ["http://localhost:3001/api/v1"], "path": ["locations"]}
           }
         },
         {
           "name": "Get Location by ID",
           "request": {
             "method": "GET",
-            "url": {"raw": "{{baseUrl}}/locations/:id", "host": ["{{baseUrl}}"], "path": ["locations", ":id"], "variable": [{"key": "id", "value": "location-id"}]}
+            "url": {"raw": "http://localhost:3001/api/v1/locations/:id", "host": ["http://localhost:3001/api/v1"], "path": ["locations", ":id"], "variable": [{"key": "id", "value": "location-id"}]}
           }
         }
       ]

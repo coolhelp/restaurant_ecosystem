@@ -15,7 +15,6 @@ out
 # Misc
 .DS_Store
 *.pem
-.env
 .env*.local
 
 # Debug
@@ -32,10 +31,13 @@ yarn-error.log*
 # Turbo
 .turbo
 
-# Mobile
+# Logs
 *.log
 *.tmp
 *.temp
+logs/*.log
+logs/*.tmp
+*.log.*
 
 # iOS
 ios/Pods/
@@ -48,10 +50,6 @@ android/app/build/
 android/.gradle/
 *.apk
 *.aab
-
-# Prisma
-prisma/migrations/**/migration_lock.toml
-
-
-#doc
 *.md
+# Prisma
+# Keep migration_lock.toml for database consistency

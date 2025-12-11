@@ -2,19 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+@layer base {
+  :root {
+    --foreground-rgb: 17, 24, 39;
+    --background-start-rgb: 249, 250, 251;
+    --background-end-rgb: 243, 244, 246;
+  }
+
+  body {
+    @apply text-gray-900 bg-gray-50 antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white font-semibold py-2 px-4 rounded-lg transition-all;
+  }
 
+  .card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-all p-6 border border-gray-100;
+  }
+
+  .sidebar-link {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-lg transition-all cursor-pointer;
+  }
+
+  .sidebar-link-active {
+    @apply bg-primary text-white;
+  }
+
+  .sidebar-link-inactive {
+    @apply text-gray-700 hover:bg-gray-100;
+  }
+}

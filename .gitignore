@@ -50,6 +50,6 @@ android/app/build/
 android/.gradle/
 *.apk
 *.aab
-*.md
+
 # Prisma
 # Keep migration_lock.toml for database consistency

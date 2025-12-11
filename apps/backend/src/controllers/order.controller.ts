@@ -102,10 +102,15 @@ export class OrderController {
 
   async getOrders(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
       const { locationId, status, orderType } = req.query;
 
+      // For customers, only show their own orders
+      // For staff/admin, show all orders (with optional filters)
       const orders = await prisma.order.findMany({
         where: {
+          ...(userRole === 'CUSTOMER' && { userId }),
           ...(locationId && { locationId: locationId as string }),
           ...(status && { orderStatus: status as OrderStatus }),
           ...(orderType && { orderType: orderType as any })

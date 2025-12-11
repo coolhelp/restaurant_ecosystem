@@ -39,22 +39,41 @@ export class AuthController {
           email: true,
           firstName: true,
           lastName: true,
-          role: true
+          role: true,
+          phone: true,
+          isVerified: true
         }
       });
 
-      // Generate token
-      const token = jwt.sign(
+      // Generate access token
+      const accessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET!,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
       );
 
+      // Generate refresh token
+      const refreshToken = jwt.sign(
+        { id: user.id },
+        process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET!,
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d' }
+      );
+
+      // Save refresh token
+      await prisma.refreshToken.create({
+        data: {
+          token: refreshToken,
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      });
+
       logger.info(`User registered: ${user.email}`);
 
       res.status(201).json({
-        status: 'success',
-        data: { user, token }
+        user,
+        accessToken,
+        refreshToken
       });
     } catch (error) {
       next(error);
@@ -75,7 +94,9 @@ export class AuthController {
           firstName: true,
           lastName: true,
           role: true,
-          isActive: true
+          phone: true,
+          isActive: true,
+          isVerified: true
         }
       });
 
@@ -95,8 +116,8 @@ export class AuthController {
         data: { lastLoginAt: new Date() }
       });
 
-      // Generate token
-      const token = jwt.sign(
+      // Generate access token
+      const accessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET!,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
@@ -105,7 +126,7 @@ export class AuthController {
       // Generate refresh token
       const refreshToken = jwt.sign(
         { id: user.id },
-        process.env.REFRESH_TOKEN_SECRET!,
+        process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET!,
         { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d' }
       );
 
@@ -123,12 +144,9 @@ export class AuthController {
       const { password: _, ...userWithoutPassword } = user;
 
       res.json({
-        status: 'success',
-        data: {
-          user: userWithoutPassword,
-          token,
-          refreshToken
-        }
+        user: userWithoutPassword,
+        accessToken,
+        refreshToken
       });
     } catch (error) {
       next(error);
@@ -146,7 +164,7 @@ export class AuthController {
       // Verify refresh token
       const decoded = jwt.verify(
         refreshToken,
-        process.env.REFRESH_TOKEN_SECRET!
+        process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET!
       ) as any;
 
       // Check if token exists in database
@@ -172,16 +190,15 @@ export class AuthController {
         throw new AppError('User not found', 404);
       }
 
-      // Generate new token
-      const token = jwt.sign(
+      // Generate new access token
+      const accessToken = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET!,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
       );
 
       res.json({
-        status: 'success',
-        data: { token }
+        accessToken
       });
     } catch (error) {
       next(error);

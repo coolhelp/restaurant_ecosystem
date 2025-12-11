@@ -470,9 +470,5 @@ Order created
 - Payment success rate
 - Active WebSocket connections
 
----
 
-**Version**: 1.0  
-**Last Updated**: December 10, 2025  
-**Author**: Domenico D.
 
